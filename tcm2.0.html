@@ -1,0 +1,1641 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中成药化学数据库管理系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2c7a7b;
+            --secondary-color: #e6fffa;
+            --accent-color: #38b2ac;
+            --dark-color: #285e61;
+            --light-color: #f8f9fa;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-color);
+            color: #333;
+            overflow-x: hidden;
+        }
+        
+        .navbar {
+            background-color: var(--primary-color);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .sidebar {
+            background-color: var(--secondary-color);
+            border-right: 1px solid #cbd5e0;
+            height: calc(100vh - 56px);
+            position: sticky;
+            top: 56px;
+            padding-top: 20px;
+            transition: all 0.3s;
+        }
+        
+        .sidebar .nav-link {
+            color: #2d3748;
+            font-weight: 500;
+            border-radius: 8px;
+            margin: 4px 10px;
+            padding: 10px 15px;
+        }
+        
+        .sidebar .nav-link:hover {
+            background-color: #bee3f8;
+            color: var(--primary-color);
+        }
+        
+        .sidebar .nav-link.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .main-content {
+            padding: 20px;
+            min-height: calc(100vh - 56px);
+        }
+        
+        .page {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+            margin-bottom: 20px;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border: none;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--dark-color);
+        }
+        
+        .table thead {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .stat-card {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .feature-icon {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+        
+        .search-box {
+            position: relative;
+        }
+        
+        .search-box .form-control {
+            padding-left: 40px;
+        }
+        
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 12px;
+            color: #a0aec0;
+        }
+        
+        .action-buttons .btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 30px;
+        }
+        
+        .import-export-card {
+            text-align: center;
+            padding: 30px 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .import-export-card:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        .settings-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .help-section {
+            margin-bottom: 25px;
+        }
+        
+        .help-section h4 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+        
+        .molecule-viewer {
+            width: 100%;
+            height: 200px;
+            background-color: #f1f8ff;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
+            background-color: white;
+            border-top: 1px solid #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-database me-2"></i>
+                中成药化学数据库管理系统
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-user me-1"></i> 管理员</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showPage('settings')"><i class="fas fa-cog me-1"></i> 设置</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-sign-out-alt me-1"></i> 退出</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- 侧边栏 -->
+            <div class="col-lg-2 col-md-3 p-0 sidebar d-none d-md-block">
+                <div class="list-group list-group-flush">
+                    <a href="#" class="list-group-item list-group-item-action active" onclick="showPage('dashboard')">
+                        <i class="fas fa-home me-2"></i> 控制台
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action" onclick="showPage('dataManagement')">
+                        <i class="fas fa-table me-2"></i> 数据管理
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action" onclick="showPage('advancedSearch')">
+                        <i class="fas fa-search me-2"></i> 高级搜索
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action" onclick="showPage('dataAnalysis')">
+                        <i class="fas fa-chart-bar me-2"></i> 数据分析
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action" onclick="showPage('importExport')">
+                        <i class="fas fa-file-import me-2"></i> 导入/导出
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action" onclick="showPage('settings')">
+                        <i class="fas fa-tools me-2"></i> 系统设置
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action" onclick="showPage('help')">
+                        <i class="fas fa-question-circle me-2"></i> 帮助文档
+                    </a>
+                </div>
+                
+                <div class="mt-4 px-3">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h6>系统状态</h6>
+                            <div class="mt-3">
+                                <span class="badge bg-success">运行中</span>
+                            </div>
+                            <div class="mt-2 small">
+                                <div>数据库: 在线</div>
+                                <div>存储: 78% 已用</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 主内容区 -->
+            <div class="col-lg-10 col-md-9 main-content">
+                <!-- 控制台页面 -->
+                <div id="dashboard" class="page active">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2>控制台</h2>
+                        <div>
+                            <span class="me-2">2023年12月15日</span>
+                            <span class="badge bg-info">最新更新: 今天 14:28</span>
+                        </div>
+                    </div>
+
+                    <!-- 统计卡片 -->
+                    <div class="row mb-4">
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card">
+                                <div class="card-body stat-card">
+                                    <div class="feature-icon">
+                                        <i class="fas fa-pills"></i>
+                                    </div>
+                                    <div class="stat-number">248</div>
+                                    <p class="card-text">中成药品种</p>
+                                    <div class="text-success small">
+                                        <i class="fas fa-arrow-up"></i> 本月新增 12 种
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card">
+                                <div class="card-body stat-card">
+                                    <div class="feature-icon">
+                                        <i class="fas fa-leaf"></i>
+                                    </div>
+                                    <div class="stat-number">136</div>
+                                    <p class="card-text">中药成分</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card">
+                                <div class="card-body stat-card">
+                                    <div class="feature-icon">
+                                        <i class="fas fa-atom"></i>
+                                    </div>
+                                    <div class="stat-number">1,842</div>
+                                    <p class="card-text">化学成分</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card">
+                                <div class="card-body stat-card">
+                                    <div class="feature-icon">
+                                        <i class="fas fa-chart-line"></i>
+                                    </div>
+                                    <div class="stat-number">76%</div>
+                                    <p class="card-text">数据完整度</p>
+                                    <div class="progress mt-2" style="height: 8px;">
+                                        <div class="progress-bar" role="progressbar" style="width: 76%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <div class="card">
+                                <div class="card-header bg-white">
+                                    <h5 class="mb-0">近期活动</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-container">
+                                        <canvas id="activityChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="card">
+                                <div class="card-header bg-white">
+                                    <h5 class="mb-0">类别分布</h5>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="categoryChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">最近添加的药品</h5>
+                                    <a href="#" onclick="showPage('dataManagement')" class="btn btn-sm btn-primary">查看全部</a>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>药品ID</th>
+                                                    <th>药品名称</th>
+                                                    <th>添加日期</th>
+                                                    <th>类别</th>
+                                                    <th>状态</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>ZC128</td>
+                                                    <td>银黄颗粒</td>
+                                                    <td>2023-12-14</td>
+                                                    <td><span class="badge bg-success">清热解毒</span></td>
+                                                    <td><span class="badge bg-success">已验证</span></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>ZC129</td>
+                                                    <td>清热消炎宁胶囊</td>
+                                                    <td>2023-12-13</td>
+                                                    <td><span class="badge bg-success">清热解毒</span></td>
+                                                    <td><span class="badge bg-warning">待验证</span></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>ZC130</td>
+                                                    <td>抗病毒口服液</td>
+                                                    <td>2023-12-10</td>
+                                                    <td><span class="badge bg-success">清热解毒</span></td>
+                                                    <td><span class="badge bg-success">已验证</span></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>ZC131</td>
+                                                    <td>炎立消胶囊</td>
+                                                    <td>2023-12-08</td>
+                                                    <td><span class="badge bg-info">消炎止痛</span></td>
+                                                    <td><span class="badge bg-success">已验证</span></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 数据管理页面 -->
+                <div id="dataManagement" class="page">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2>数据管理</h2>
+                        <div>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addMedicineModal">
+                                <i class="fas fa-plus me-1"></i> 添加新药品
+                            </button>
+                            <button class="btn btn-outline-secondary">
+                                <i class="fas fa-sync-alt me-1"></i> 刷新
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 搜索和筛选 -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 search-box">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" class="form-control" placeholder="搜索药品名称、成分或分子式...">
+                                </div>
+                                <div class="col-md-3">
+                                    <select class="form-select">
+                                        <option selected>所有类别</option>
+                                        <option>清热解毒</option>
+                                        <option>解表发散</option>
+                                        <option>补益调理</option>
+                                        <option>理气活血</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <select class="form-select">
+                                        <option selected>所有地区</option>
+                                        <option>广东</option>
+                                        <option>北京</option>
+                                        <option>江苏</option>
+                                        <option>四川</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-md-12">
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="checkbox" id="verifiedOnly" checked>
+                                        <label class="form-check-label" for="verifiedOnly">仅显示已验证数据</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="checkbox" id="inStock">
+                                        <label class="form-check-label" for="inStock">仅显示有库存</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="checkbox" id="highUsage">
+                                        <label class="form-check-label" for="highUsage">高使用量优先</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 数据表格 -->
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>药品ID</th>
+                                            <th>药品名称</th>
+                                            <th>主要成分</th>
+                                            <th>分子式</th>
+                                            <th>类别</th>
+                                            <th>地区使用量</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>ZC001</td>
+                                            <td>板蓝根颗粒</td>
+                                            <td>板蓝根</td>
+                                            <td>C<sub>5</sub>H<sub>7</sub>NO<sub>2</sub></td>
+                                            <td><span class="badge bg-success">清热解毒</span></td>
+                                            <td>广东: 高</td>
+                                            <td class="action-buttons">
+                                                <button class="btn btn-sm btn-info"><i class="fas fa-eye"></i></button>
+                                                <button class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></button>
+                                                <button class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>ZC002</td>
+                                            <td>双黄连口服液</td>
+                                            <td>金银花、黄芩、连翘</td>
+                                            <td>C<sub>16</sub>H<sub>18</sub>O<sub>9</sub></td>
+                                            <td><span class="badge bg-success">清热解毒</span></td>
+                                            <td>广东: 中</td>
+                                            <td class="action-buttons">
+                                                <button class="btn btn-sm btn-info"><i class="fas fa-eye"></i></button>
+                                                <button class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></button>
+                                                <button class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>ZC003</td>
+                                            <td>牛黄解毒片</td>
+                                            <td>人工牛黄、雄黄、石膏</td>
+                                            <td>As<sub>4</sub>S<sub>4</sub></td>
+                                            <td><span class="badge bg-success">清热解毒</span></td>
+                                            <td>广东: 高</td>
+                                            <td class="action-buttons">
+                                                <button class="btn btn-sm btn-info"><i class="fas fa-eye"></i></button>
+                                                <button class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></button>
+                                                <button class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>ZC004</td>
+                                            <td>银翘解毒丸</td>
+                                            <td>金银花、连翘、薄荷</td>
+                                            <td>C<sub>10</sub>H<sub>10</sub>O<sub>4</sub></td>
+                                            <td><span class="badge bg-success">清热解毒</span></td>
+                                            <td>广东: 中</td>
+                                            <td class="action-buttons">
+                                                <button class="btn btn-sm btn-info"><i class="fas fa-eye"></i></button>
+                                                <button class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></button>
+                                                <button class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>ZC005</td>
+                                            <td>黄连上清丸</td>
+                                            <td>黄连、栀子、连翘</td>
+                                            <td>C<sub>19</sub>H<sub>16</sub>O<sub>8</sub></td>
+                                            <td><span class="badge bg-success">清热解毒</span></td>
+                                            <td>广东: 低</td>
+                                            <td class="action-buttons">
+                                                <button class="btn btn-sm btn-info"><i class="fas fa-eye"></i></button>
+                                                <button class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></button>
+                                                <button class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <!-- 分页 -->
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination justify-content-center">
+                                    <li class="page-item disabled">
+                                        <a class="page-link" href="#" tabindex="-1">上一页</a>
+                                    </li>
+                                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="#">下一页</a>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 高级搜索页面 -->
+                <div id="advancedSearch" class="page">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2>高级搜索</h2>
+                        <div>
+                            <button class="btn btn-outline-secondary">
+                                <i class="fas fa-history me-1"></i> 搜索历史
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-4">
+                            <div class="card">
+                                <div class="card-header bg-white">
+                                    <h5 class="mb-0">搜索条件</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form>
+                                        <div class="mb-3">
+                                            <label class="form-label">药品名称</label>
+                                            <input type="text" class="form-control" placeholder="输入药品名称">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">中药成分</label>
+                                            <select class="form-select" multiple>
+                                                <option>板蓝根</option>
+                                                <option>金银花</option>
+                                                <option>黄芩</option>
+                                                <option>连翘</option>
+                                                <option>黄连</option>
+                                                <option>栀子</option>
+                                                <option>石膏</option>
+                                                <option>薄荷</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">化学分子式</label>
+                                            <input type="text" class="form-control" placeholder="例如: C16H18O9">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">分子量范围</label>
+                                            <div class="row">
+                                                <div class="col">
+                                                    <input type="number" class="form-control" placeholder="最小">
+                                                </div>
+                                                <div class="col">
+                                                    <input type="number" class="form-control" placeholder="最大">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">药品类别</label>
+                                            <select class="form-select">
+                                                <option selected>所有类别</option>
+                                                <option>清热解毒</option>
+                                                <option>解表发散</option>
+                                                <option>补益调理</option>
+                                                <option>理气活血</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">地区使用量</label>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="highUsageCheck">
+                                                <label class="form-check-label" for="highUsageCheck">高使用量</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="mediumUsageCheck">
+                                                <label class="form-check-label" for="mediumUsageCheck">中等使用量</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="lowUsageCheck">
+                                                <label class="form-check-label" for="lowUsageCheck">低使用量</label>
+                                            </div>
+                                        </div>
+                                        <div class="d-grid">
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fas fa-search me-1"></i> 开始搜索
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-8">
+                            <div class="card">
+                                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">搜索结果</h5>
+                                    <span class="badge bg-info">找到 24 条记录</span>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>药品名称</th>
+                                                    <th>成分</th>
+                                                    <th>分子式</th>
+                                                    <th>类别</th>
+                                                    <th>操作</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>板蓝根颗粒</td>
+                                                    <td>板蓝根</td>
+                                                    <td>C<sub>5</sub>H<sub>7</sub>NO<sub>2</sub></td>
+                                                    <td><span class="badge bg-success">清热解毒</span></td>
+                                                    <td class="action-buttons">
+                                                        <button class="btn btn-sm btn-info"><i class="fas fa-eye"></i></button>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>双黄连口服液</td>
+                                                    <td>金银花、黄芩、连翘</td>
+                                                    <td>C<sub>16</sub>H<sub>18</sub>O<sub>9</sub></td>
+                                                    <td><span class="badge bg-success">清热解毒</span></td>
+                                                    <td class="action-buttons">
+                                                        <button class="btn btn-sm btn-info"><i class="fas fa-eye"></i></button>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>银黄颗粒</td>
+                                                    <td>金银花、黄芩</td>
+                                                    <td>C<sub>15</sub>H<sub>16</sub>O<sub>7</sub></td>
+                                                    <td><span class="badge bg-success">清热解毒</span></td>
+                                                    <td class="action-buttons">
+                                                        <button class="btn btn-sm btn-info"><i class="fas fa-eye"></i></button>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>清热消炎宁胶囊</td>
+                                                    <td>九节茶</td>
+                                                    <td>C<sub>10</sub>H<sub>12</sub>O<sub>2</sub></td>
+                                                    <td><span class="badge bg-success">清热解毒</span></td>
+                                                    <td class="action-buttons">
+                                                        <button class="btn btn-sm btn-info"><i class="fas fa-eye"></i></button>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    
+                                    <nav aria-label="Page navigation">
+                                        <ul class="pagination justify-content-center">
+                                            <li class="page-item disabled">
+                                                <a class="page-link" href="#" tabindex="-1">上一页</a>
+                                            </li>
+                                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                                            <li class="page-item"><a class="page-link" href="#">2</a></li>
+                                            <li class="page-item"><a class="page-link" href="#">3</a></li>
+                                            <li class="page-item">
+                                                <a class="page-link" href="#">下一页</a>
+                                            </li>
+                                        </ul>
+                                    </nav>
+                                </div>
+                            </div>
+                            
+                            <div class="card mt-4">
+                                <div class="card-header bg-white">
+                                    <h5 class="mb-0">分子结构预览</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="molecule-viewer">
+                                        <i class="fas fa-molecule fa-3x me-2"></i>
+                                        <span>分子结构可视化区域</span>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col">
+                                            <strong>分子名称:</strong> 黄芩苷
+                                        </div>
+                                        <div class="col">
+                                            <strong>分子式:</strong> C<sub>21</sub>H<sub>18</sub>O<sub>11</sub>
+                                        </div>
+                                        <div class="col">
+                                            <strong>分子量:</strong> 446.36 g/mol
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 数据分析页面 -->
+                <div id="dataAnalysis" class="page">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2>数据分析</h2>
+                        <div>
+                            <button class="btn btn-primary">
+                                <i class="fas fa-download me-1"></i> 导出报告
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-header bg-white">
+                                    <h5 class="mb-0">药品使用量趋势 (广东地区)</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-container">
+                                        <canvas id="usageTrendChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header bg-white">
+                                    <h5 class="mb-0">药品类别分布</h5>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="categoryPieChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-white">
+                                    <h5 class="mb-0">化学成分分子量分布</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-container">
+                                        <canvas id="molecularWeightChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-white">
+                                    <h5 class="mb-0">地区使用量对比</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-container">
+                                        <canvas id="regionComparisonChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header bg-white">
+                                    <h5 class="mb-0">相关性分析</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-4">
+                                            <select class="form-select">
+                                                <option selected>选择分析维度 1</option>
+                                                <option>分子量</option>
+                                                <option>使用量</option>
+                                                <option>成分数量</option>
+                                                <option>生物利用度</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <select class="form-select">
+                                                <option selected>选择分析维度 2</option>
+                                                <option>分子量</option>
+                                                <option>使用量</option>
+                                                <option>成分数量</option>
+                                                <option>生物利用度</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <button class="btn btn-primary w-100">进行分析</button>
+                                        </div>
+                                    </div>
+                                    <div class="chart-container">
+                                        <canvas id="correlationChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 导入/导出页面 -->
+                <div id="importExport" class="page">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2>数据导入/导出</h2>
+                        <div>
+                            <button class="btn btn-outline-secondary">
+                                <i class="fas fa-history me-1"></i> 操作记录
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="card import-export-card" data-bs-toggle="modal" data-bs-target="#importModal">
+                                <div class="card-body">
+                                    <div class="feature-icon">
+                                        <i class="fas fa-file-import"></i>
+                                    </div>
+                                    <h4>数据导入</h4>
+                                    <p>从Excel、CSV或JSON文件导入数据到数据库</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="card import-export-card" data-bs-toggle="modal" data-bs-target="#exportModal">
+                                <div class="card-body">
+                                    <div class="feature-icon">
+                                        <i class="fas fa-file-export"></i>
+                                    </div>
+                                    <h4>数据导出</h4>
+                                    <p>将数据库中的数据导出为多种格式</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header bg-white">
+                                    <h5 class="mb-0">数据模板下载</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-4 text-center mb-3">
+                                            <div class="p-3 border rounded">
+                                                <i class="fas fa-file-excel fa-3x text-success mb-2"></i>
+                                                <h5>Excel模板</h5>
+                                                <p>用于批量导入药品数据</p>
+                                                <button class="btn btn-outline-success">下载</button>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 text-center mb-3">
+                                            <div class="p-3 border rounded">
+                                                <i class="fas fa-file-csv fa-3x text-primary mb-2"></i>
+                                                <h5>CSV模板</h5>
+                                                <p>用于简单数据导入</p>
+                                                <button class="btn btn-outline-primary">下载</button>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 text-center mb-3">
+                                            <div class="p-3 border rounded">
+                                                <i class="fas fa-file-code fa-3x text-warning mb-2"></i>
+                                                <h5>JSON模板</h5>
+                                                <p>用于结构化数据导入</p>
+                                                <button class="btn btn-outline-warning">下载</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header bg-white">
+                                    <h5 class="mb-0">最近导入/导出操作</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>日期</th>
+                                                    <th>操作类型</th>
+                                                    <th>文件名</th>
+                                                    <th>记录数</th>
+                                                    <th>状态</th>
+                                                    <th>操作人</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>2023-12-14 10:23</td>
+                                                    <td><span class="badge bg-success">导入</span></td>
+                                                    <td>清热解毒药物数据.xlsx</td>
+                                                    <td>24</td>
+                                                    <td><span class="badge bg-success">成功</span></td>
+                                                    <td>admin</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>2023-12-13 15:46</td>
+                                                    <td><span class="badge bg-info">导出</span></td>
+                                                    <td>广东地区用药报告.pdf</td>
+                                                    <td>56</td>
+                                                    <td><span class="badge bg-success">成功</span></td>
+                                                    <td>admin</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>2023-12-12 09:12</td>
+                                                    <td><span class="badge bg-success">导入</span></td>
+                                                    <td>化学成分数据.csv</td>
+                                                    <td>128</td>
+                                                    <td><span class="badge bg-warning">部分成功</span></td>
+                                                    <td>researcher</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>2023-12-10 14:35</td>
+                                                    <td><span class="badge bg-info">导出</span></td>
+                                                    <td>全部药品列表.json</td>
+                                                    <td>248</td>
+                                                    <td><span class="badge bg-success">成功</span></td>
+                                                    <td>admin</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 系统设置页面 -->
+                <div id="settings" class="page">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2>系统设置</h2>
+                        <div>
+                            <button class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i> 保存设置
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="settings-section">
+                                <h4><i class="fas fa-user-cog me-2"></i> 用户设置</h4>
+                                <div class="mb-3">
+                                    <label class="form-label">用户名</label>
+                                    <input type="text" class="form-control" value="admin">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">电子邮件</label>
+                                    <input type="email" class="form-control" value="admin@tcmdatabase.com">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">密码</label>
+                                    <input type="password" class="form-control" value="********">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">语言偏好</label>
+                                    <select class="form-select">
+                                        <option selected>简体中文</option>
+                                        <option>English</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="settings-section">
+                                <h4><i class="fas fa-database me-2"></i> 数据库设置</h4>
+                                <div class="mb-3">
+                                    <label class="form-label">数据库类型</label>
+                                    <input type="text" class="form-control" value="MySQL" disabled>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">主机地址</label>
+                                    <input type="text" class="form-control" value="localhost">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">端口</label>
+                                    <input type="number" class="form-control" value="3306">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">自动备份</label>
+                                    <select class="form-select">
+                                        <option selected>每天</option>
+                                        <option>每周</option>
+                                        <option>每月</option>
+                                        <option>关闭</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="settings-section">
+                                <h4><i class="fas fa-paint-brush me-2"></i> 界面设置</h4>
+                                <div class="mb-3">
+                                    <label class="form-label">主题</label>
+                                    <select class="form-select">
+                                        <option selected>浅色</option>
+                                        <option>深色</option>
+                                        <option>自动</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">每页显示数量</label>
+                                    <input type="number" class="form-control" value="20">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">默认视图</label>
+                                    <select class="form-select">
+                                        <option selected>表格视图</option>
+                                        <option>卡片视图</option>
+                                    </select>
+                                </div>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="animationsSwitch" checked>
+                                    <label class="form-check-label" for="animationsSwitch">启用动画效果</label>
+                                </div>
+                            </div>
+
+                            <div class="settings-section">
+                                <h4><i class="fas fa-shield-alt me-2"></i> 安全设置</h4>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="twoFactorSwitch">
+                                    <label class="form-check-label" for="twoFactorSwitch">双因素认证</label>
+                                </div>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="sessionTimeoutSwitch" checked>
+                                    <label class="form-check-label" for="sessionTimeoutSwitch">会话超时自动退出</label>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">会话超时时间（分钟）</label>
+                                    <input type="number" class="form-control" value="30">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">登录尝试限制</label>
+                                    <input type="number" class="form-control" value="5">
+                                </div>
+                            </div>
+
+                            <div class="settings-section">
+                                <h4><i class="fas fa-sliders-h me-2"></i> 高级设置</h4>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="autoUpdateSwitch" checked>
+                                    <label class="form-check-label" for="autoUpdateSwitch">自动检查更新</label>
+                                </div>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="errorReportingSwitch">
+                                    <label class="form-check-label" for="errorReportingSwitch">错误报告</label>
+                                </div>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="usageStatisticsSwitch">
+                                    <label class="form-check-label" for="usageStatisticsSwitch">发送使用统计数据</label>
+                                </div>
+                                <div class="d-grid">
+                                    <button class="btn btn-outline-danger">
+                                        <i class="fas fa-trash-alt me-1"></i> 恢复默认设置
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 帮助文档页面 -->
+                <div id="help" class="page">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2>帮助文档</h2>
+                        <div>
+                            <button class="btn btn-primary">
+                                <i class="fas fa-question-circle me-1"></i> 联系支持
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <div class="card">
+                                <div class="card-header bg-white">
+                                    <h5 class="mb-0">使用指南</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="help-section">
+                                        <h4><i class="fas fa-database me-2"></i> 数据管理</h4>
+                                        <p>在数据管理页面，您可以查看、添加、编辑和删除中成药记录。使用搜索和筛选功能可以快速找到特定药品。</p>
+                                        <ul>
+                                            <li>点击"添加新药品"按钮可以添加新的中成药记录</li>
+                                            <li>使用操作列中的按钮可以查看、编辑或删除现有记录</li>
+                                            <li>使用顶部搜索框可以根据名称、成分或分子式进行搜索</li>
+                                        </ul>
+                                    </div>
+
+                                    <div class="help-section">
+                                        <h4><i class="fas fa-search me-2"></i> 高级搜索</h4>
+                                        <p>高级搜索功能允许您使用多个条件组合来精确查找药品记录。您可以基于药品名称、中药成分、化学分子式、分子量范围等条件进行搜索。</p>
+                                        <p>搜索结果会显示在页面右侧，您可以点击查看按钮查看详细信息和分子结构。</p>
+                                    </div>
+
+                                    <div class="help-section">
+                                        <h4><i class="fas fa-chart-bar me-2"></i> 数据分析</h4>
+                                        <p>数据分析页面提供多种可视化图表，帮助您了解药品使用趋势、类别分布和化学成分特征。</p>
+                                        <p>您可以查看不同地区的使用量对比，分析分子量分布，以及进行相关性分析。</p>
+                                    </div>
+
+                                    <div class="help-section">
+                                        <h4><i class="fas fa-file-import me-2"></i> 数据导入/导出</h4>
+                                        <p>系统支持从Excel、CSV和JSON格式的文件导入数据，也支持将数据导出为多种格式。</p>
+                                        <p>在导入数据前，您可以下载相应的模板文件，按照模板格式准备数据可以提高导入成功率。</p>
+                                    </div>
+
+                                    <div class="help-section">
+                                        <h4><i class="fas fa-cog me-2"></i> 系统设置</h4>
+                                        <p>在系统设置页面，您可以配置用户偏好、数据库连接、界面主题和安全选项。</p>
+                                        <p>修改设置后，记得点击"保存设置"按钮使更改生效。</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="card">
+                                <div class="card-header bg-white">
+                                    <h5 class="mb-0">常见问题</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="accordion" id="faqAccordion">
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header" id="headingOne">
+                                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">
+                                                    如何添加新的中成药记录？
+                                                </button>
+                                            </h2>
+                                            <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                                                <div class="accordion-body">
+                                                    在"数据管理"页面，点击右上角的"添加新药品"按钮，填写药品信息后保存即可。
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header" id="headingTwo">
+                                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo">
+                                                    支持哪些数据导入格式？
+                                                </button>
+                                            </h2>
+                                            <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                                <div class="accordion-body">
+                                                    系统支持Excel(.xlsx)、CSV(.csv)和JSON(.json)格式的数据导入。您可以在"导入/导出"页面下载相应的模板文件。
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header" id="headingThree">
+                                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree">
+                                                    如何备份数据库？
+                                                </button>
+                                            </h2>
+                                            <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                                <div class="accordion-body">
+                                                    在"系统设置"页面的"数据库设置"部分，您可以配置自动备份频率。也可以手动在"导入/导出"页面导出全部数据。
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header" id="headingFour">
+                                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour">
+                                                    如何恢复误删的数据？
+                                                </button>
+                                            </h2>
+                                            <div id="collapseFour" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                                <div class="accordion-body">
+                                                    如果您有最近的备份文件，可以通过数据导入功能恢复数据。如果没有备份，请联系系统管理员尝试从数据库日志中恢复。
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card mt-4">
+                                <div class="card-header bg-white">
+                                    <h5 class="mb-0">联系支持</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p>如果您遇到无法解决的问题，或者有功能建议，请联系我们的技术支持团队：</p>
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-envelope me-2"></i> support@tcmdatabase.com</li>
+                                        <li><i class="fas fa-phone me-2"></i> 400-123-4567</li>
+                                        <li><i class="fas fa-clock me-2"></i> 工作日 9:00-18:00</li>
+                                    </ul>
+                                    <div class="d-grid">
+                                        <button class="btn btn-outline-primary">
+                                            <i class="fas fa-comments me-1"></i> 在线客服
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加药品的模态框 -->
+    <div class="modal fade" id="addMedicineModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">添加新药品</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">药品名称</label>
+                                <input type="text" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">药品ID</label>
+                                <input type="text" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">类别</label>
+                                <select class="form-select" required>
+                                    <option value="">选择类别</option>
+                                    <option value="清热解毒">清热解毒</option>
+                                    <option value="解表发散">解表发散</option>
+                                    <option value="补益调理">补益调理</option>
+                                    <option value="理气活血">理气活血</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">地区使用量</label>
+                                <select class="form-select" required>
+                                    <option value="">选择地区和使用量</option>
+                                    <option value="广东高">广东: 高</option>
+                                    <option value="广东中">广东: 中</option>
+                                    <option value="广东低">广东: 低</option>
+                                    <option value="北京高">北京: 高</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">主要成分</label>
+                            <textarea class="form-control" rows="2" required></textarea>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">分子式</label>
+                                <input type="text" class="form-control">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">化学文摘社编号 (CAS)</label>
+                                <input type="text" class="form-control">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">化学结构式 (SMILES)</label>
+                            <input type="text" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">药品描述</label>
+                            <textarea class="form-control" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary">添加药品</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 导入模态框 -->
+    <div class="modal fade" id="importModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">数据导入</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">选择文件</label>
+                        <input class="form-control" type="file">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">导入格式</label>
+                        <select class="form-select">
+                            <option>Excel (.xlsx)</option>
+                            <option>CSV (.csv)</option>
+                            <option>JSON (.json)</option>
+                        </select>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="overwriteCheck">
+                        <label class="form-check-label" for="overwriteCheck">覆盖现有记录</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary">开始导入</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 导出模态框 -->
+    <div class="modal fade" id="exportModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">数据导出</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">导出格式</label>
+                        <select class="form-select">
+                            <option>Excel (.xlsx)</option>
+                            <option>CSV (.csv)</option>
+                            <option>JSON (.json)</option>
+                            <option>PDF 报告</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">数据范围</label>
+                        <select class="form-select">
+                            <option>全部数据</option>
+                            <option>当前搜索结果</option>
+                            <option>选定类别</option>
+                            <option>自定义筛选</option>
+                        </select>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="includeStructuresCheck">
+                        <label class="form-check-label" for="includeStructuresCheck">包含分子结构信息</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary">开始导出</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>中成药化学数据库管理系统 &copy; 2023 版权所有</p>
+            <p class="text-muted">版本: 1.2.0 | 最后更新: 2023-12-15</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // 页面切换功能
+        function showPage(pageId) {
+            // 隐藏所有页面
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // 显示选中的页面
+            document.getElementById(pageId).classList.add('active');
+            
+            // 更新侧边栏活动状态
+            document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            // 找到对应侧边栏链接并激活
+            const activeLink = document.querySelector(`.sidebar .nav-link[onclick="showPage('${pageId}')"]`);
+            if (activeLink) {
+                activeLink.classList.add('active');
+            }
+        }
+        
+        // 初始化图表
+        document.addEventListener('DOMContentLoaded', function() {
+            // 控制台活动图表
+            const activityCtx = document.getElementById('activityChart').getContext('2d');
+            new Chart(activityCtx, {
+                type: 'line',
+                data: {
+                    labels: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+                    datasets: [{
+                        label: '药品添加数量',
+                        data: [12, 19, 15, 17, 22, 23, 20, 25, 23, 28, 32, 35],
+                        borderColor: '#2c7a7b',
+                        tension: 0.3,
+                        fill: true,
+                        backgroundColor: 'rgba(44, 122, 123, 0.1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            
+            // 类别分布图表
+            const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+            new Chart(categoryCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['清热解毒', '解表发散', '补益调理', '理气活血', '其他'],
+                    datasets: [{
+                        data: [45, 22, 15, 12, 6],
+                        backgroundColor: [
+                            '#2c7a7b',
+                            '#38b2ac',
+                            '#48bb78',
+                            '#ecc94b',
+                            '#a0aec0'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            
+            // 使用趋势图表
+            const usageTrendCtx = document.getElementById('usageTrendChart').getContext('2d');
+            new Chart(usageTrendCtx, {
+                type: 'line',
+                data: {
+                    labels: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+                    datasets: [{
+                        label: '板蓝根颗粒',
+                        data: [120, 135, 140, 145, 150, 148, 160, 165, 170, 175, 180, 185],
+                        borderColor: '#2c7a7b',
+                        tension: 0.3
+                    }, {
+                        label: '双黄连口服液',
+                        data: [90, 95, 100, 105, 110, 115, 120, 125, 130, 135, 140, 145],
+                        borderColor: '#38b2ac',
+                        tension: 0.3
+                    }, {
+                        label: '牛黄解毒片',
+                        data: [80, 85, 90, 95, 100, 105, 110, 115, 120, 125, 130, 135],
+                        borderColor: '#48bb78',
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            
+            // 类别饼图
+            const categoryPieCtx = document.getElementById('categoryPieChart').getContext('2d');
+            new Chart(categoryPieCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['清热解毒', '解表发散', '补益调理', '理气活血', '其他'],
+                    datasets: [{
+                        data: [45, 22, 15, 12, 6],
+                        backgroundColor: [
+                            '#2c7a7b',
+                            '#38b2ac',
+                            '#48bb78',
+                            '#ecc94b',
+                            '#a0aec0'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            
+            // 分子量分布图表
+            const molecularWeightCtx = document.getElementById('molecularWeightChart').getContext('2d');
+            new Chart(molecularWeightCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['0-200', '200-400', '400-600', '600-800', '800+'],
+                    datasets: [{
+                        label: '化学成分数量',
+                        data: [320, 650, 420, 280, 170],
+                        backgroundColor: '#2c7a7b'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            
+            // 地区对比图表
+            const regionComparisonCtx = document.getElementById('regionComparisonChart').getContext('2d');
+            new Chart(regionComparisonCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['板蓝根颗粒', '双黄连口服液', '牛黄解毒片', '银翘解毒丸', '黄连上清丸'],
+                    datasets: [{
+                        label: '广东',
+                        data: [85, 75, 80, 65, 50],
+                        backgroundColor: '#2c7a7b'
+                    }, {
+                        label: '北京',
+                        data: [70, 65, 75, 60, 55],
+                        backgroundColor: '#38b2ac'
+                    }, {
+                        label: '江苏',
+                        data: [60, 70, 65, 70, 45],
+                        backgroundColor: '#48bb78'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            
+            // 相关性分析图表
+            const correlationCtx = document.getElementById('correlationChart').getContext('2d');
+            new Chart(correlationCtx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: '药品数据',
+                        data: [
+                            {x: 120, y: 85},
+                            {x: 180, y: 75},
+                            {x: 150, y: 80},
+                            {x: 220, y: 65},
+                            {x: 300, y: 50},
+                            {x: 280, y: 70},
+                            {x: 190, y: 75},
+                            {x: 130, y: 85},
+                            {x: 200, y: 60},
+                            {x: 260, y: 55},
+                            {x: 240, y: 65},
+                            {x: 170, y: 70}
+                        ],
+                        backgroundColor: '#2c7a7b'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: '分子量'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: '使用量指数'
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
